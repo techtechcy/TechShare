@@ -39,6 +39,21 @@ def prints(type: str, text: str, end_char: str = ""):
     
 
 class Client:
+        """
+        A client class to handle connections and file requests from a server.
+        Attributes:
+            myip (str): The IP address of the client.
+            sock (socket.socket): The socket object for the client.
+        Methods:
+            connect_to_server(ip: str, port: int):
+                Connects to the server at the specified IP address and port.
+                
+            stop():
+                Closes the connection to the server.
+                
+            request_file(filename: str):
+                Requests a file from the server and saves it to the 'Downloads' directory.
+        """
         def __init__(self, ):
             self.myip = requests.get('https://api.ipify.org').text
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,6 +73,12 @@ class Client:
         def request_file(self, filename):
             try:
                 self.sock.send(f"Requesting~%!%~{filename}".encode())
+                response = self.sock.recv(1024).decode()
+                
+                if response == "File not found":
+                    prints(types.ERROR, f"File '{filename}' not found on server")
+                    return
+                
                 with open(os.path.join("Downloads", filename), "wb") as f:
                     while True:
                         data = self.sock.recv(1024)
@@ -147,6 +168,12 @@ class Server():
                 request = client.recv(1024).decode()
                 if request.startswith("Requesting~%!%~"):
                     filename = request.split("~%!%~")[1]
+                    
+                    if not os.path.exists(os.path.join("server_files", filename)):
+                        prints(types.ERROR, f"Requested file '{filename}' does not exist.")
+                        client.send("File not found".encode())
+                        return
+                    
                     with open(os.path.join("server_files", filename), "rb") as f:
                         data = f.read(1024)
                         while data:

@@ -1,7 +1,12 @@
 
 # TechShare
 
-TechShare is a windows application that allows you and your friends to share files without using external file servers, like google drive.
+TechShare is a Windows application that allows you and your friends to share files without using external file servers, like Google Drive.
+
+## How does it work?
+TechShare either:
+- Creates a socket server on port 8081 and then listens for any clients requesting a file.
+- Creates a socket client that can request a TechShare server a file.
 
 ## Advantages of directly sending files
 
@@ -12,8 +17,8 @@ TechShare is a windows application that allows you and your friends to share fil
 
 ## Disadvantages of directly sending files
 
-- Have to start the app everytime you need to send files (or leave the app open which is NOT RECOMMENDED)
-- Have to share your ip to the receiver (except if you use playit.gg)
+- Have to start the app every time you need to send files (or leave the app open 24/7 which is NOT RECOMMENDED)
+- Have to share your IP with the receiver (except if you use playit.gg)
 ## To Do:
 
 - Make v1.0 (make it functional)
@@ -26,15 +31,15 @@ TechShare is a windows application that allows you and your friends to share fil
 
 ## FAQ
 
-#### How do i download & use this
+#### How do I download & use this
 
 This app is not finished yet
 
 #### When is this going to be finished?
 
-I dont know, I am the only developer working on this as a side project
+I don't know, I am the only developer working on this as a side project
 
 ### Why is it not recommended to run 24/7?
 
-I have not yet tested this app for any exploits, so to be safe dont use it when not needed
+I have not yet tested this app for any exploits, so to be safe don't use it when not needed
 

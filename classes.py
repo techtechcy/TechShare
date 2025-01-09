@@ -1,6 +1,7 @@
 import threading
 import requests
 import socket
+import json
 import os
 
 class _Types:
@@ -8,6 +9,7 @@ class _Types:
     WARNING = "warning"
     SUCCESS = "success"
     IMPORTANT = "important"
+    DEBUG = "debug"
     
     
 
@@ -36,7 +38,13 @@ def prints(type: str, text: str, end_char: str = ""):
         print(f"{colors.GREEN}[*] {text}{colors.ENDC}{end_char}")
     elif type == "important":
         print(f"{colors.BOLD}{colors.UNDERLINE}[*] {text}{colors.ENDC}{end_char}")
-    
+    elif type == "debug":
+        with open("config.json", "r") as f:
+            debug_mode: bool = json.loads(f.read())["debug_mode"]
+            
+        if debug_mode:
+            print(f"{colors.CYAN}[DEBUG] {text}{colors.ENDC}{end_char}")
+
 
 class Client:
         """
@@ -122,12 +130,15 @@ class Server():
         Stops the server and closes the server socket.
     """
     def __init__(self, address: list[str], max_connections: int = 5):
-        self.ip = address[0]
+        self.ip = str(address[0])
         self.port = int(address[1])
         self.max_connections = max_connections
         
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_loop_running = False
+        self.public_ip = requests.get('https://api.ipify.org').text
+        
+        self.server_loop_thread: threading.Thread = None
+        self.server_loop_pid = None
         
         
     def start(self):
@@ -137,29 +148,33 @@ class Server():
         ip = self.ip
         port = self.port
 
-        self.server.bind((ip, port,))
+        prints(type=types.DEBUG, text=f"Socket: {self.server}" )
+        
+        self.server.bind((ip, port))
         self.server.listen(self.max_connections)
         prints(types.SUCCESS, f"Server binded on {ip}:{port}")
-        self.server_loop_running = True
-        threading.Thread(target=self.server_loop, args=(self.server,), name="Server Loop").start()
+        
+        self.server_loop_thread = threading.Thread(target=self.server_loop, args=(self.server,), name="Server Loop")
+        self.server_loop_thread.start()
         
     
     def server_loop(self, server: socket.socket):
-            prints(types.SUCCESS, "Server loop started")
-            
-            while self.server_loop_running:
-                try:
-                    client, address = server.accept()
-                    prints(types.SUCCESS, f"Accepted connection from: {address[0]}:{address[1]}")
-                    threading.Thread(target=self.handle_client, args=(client, address), name=f"Handling {address[0]}:{address[1]}").start()
-                    
-                except OSError as e:
-                    if not self.server_loop_running:
-                        break
-                    
-                except Exception as e:
-                    prints(types.ERROR, f"Unexpected error: {e}")
+        self.server_loop_pid = os.getpid()
+        prints(types.SUCCESS, f"Server loop started with PID: {self.server_loop_pid}")
+        
+        while self.server_loop_thread.is_alive():
+            try:
+                client, address = server.accept()
+                prints(types.SUCCESS, f"Accepted connection from: {address[0]}:{address[1]}")
+                threading.Thread(target=self.handle_client, args=(client, address), name=f"Handling {address[0]}:{address[1]}").start()
                 
+            except OSError as e:
+                if not self.server_loop_thread.is_alive():
+                    break
+                
+            except Exception as e:
+                prints(types.ERROR, f"Unexpected error: {e}")
+            
     
     def handle_client(self, client: socket.socket, address: tuple):
         prints(types.SUCCESS, f"Handling client {address[0]}:{address[1]}")
@@ -194,12 +209,13 @@ class Server():
             
     
     def stop(self):
-        self.server_loop_running = False
+        self._stop_loop()
         self.server.close()
-        prints(types.SUCCESS, "Server has been stopped")   
+        prints(types.SUCCESS, "Server has been stopped")
         
     
     def _stop_loop(self):
+        self._stop_loop(); prints(types.DEBUG, "Server loop killed")
         pid = self.server_loop_pid
         os.kill(pid, 0)
         prints(types.SUCCESS, f"Server loop with pid {pid} has been killed")

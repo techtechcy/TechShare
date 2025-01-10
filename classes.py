@@ -209,13 +209,12 @@ class Server():
             
     
     def stop(self):
-        self._stop_loop()
-        self.server.close()
+        self._stop_loop(); prints(types.DEBUG, "Server loop killed")
+        self.server.close(); prints(types.DEBUG, "Server socket closed")
         prints(types.SUCCESS, "Server has been stopped")
         
     
     def _stop_loop(self):
-        self._stop_loop(); prints(types.DEBUG, "Server loop killed")
         pid = self.server_loop_pid
         os.kill(pid, 0)
         prints(types.SUCCESS, f"Server loop with pid {pid} has been killed")

@@ -1,6 +1,5 @@
 import socket
 import threading
-import signal
 import keyboard
 import json
 from time import sleep
@@ -9,44 +8,39 @@ from classes import *
 from classes import types as tp
 import os
 
-# This is the server file for the file sharing application. It is responsible for handling incoming connections and requests from clients.
+### This is the server file for the file sharing application. It is responsible for handling incoming connections and requests from clients. ###
+
+
 def config_loader():
-    if not os.path.exists("config.txt"):
+    if not os.path.exists("config.json"):
+        prints(tp.WARNING, """"Debug mode" was not found in the config file. Setting to False.""")
         with open("config.json", "w") as f:
             default_config = {
                 "debug_mode": False,
             }
             
             f.write(json.dumps(default_config))
-        return
+        return default_config
     
-    with open("config.json", "rw") as f:
-        config: dict = json.loads(f.read())
-        
-        if "debug_mode" not in config:
-            prints(tp.WARNING, """"Debug mode" was not found in the config file. Setting to False.""")
-            config["debug_mode"] = False
+    
+    with open("config.json", "r+") as f:
+        config = json.loads(f.read())
+        f.seek(0)
         
         if not isinstance(config["debug_mode"], bool):
             prints(tp.WARNING, """The value for the "Debug mode" config is not boolean. Setting to False.""")
             config["debug_mode"] = False
             
         f.write(json.dumps(config))
-            
-        globals()["debug_mode"] = config["debug_mode"]
+        f.truncate()
     
-    
+
     prints(type=tp.DEBUG, text=f"Config loaded successfully with values:\n{config}")
     
-    if globals()["debug_mode"] == False:
-        prints(tp.SUCCESS, "Config loaded successfully.")
-        
+    globals()["debug_mode"] = config["debug_mode"]
     return config
     
-        
 
-def keybinds_handler(server: Server):
-    pass
 
 
 def command_handler(command: str, server: Server, config: dict):
@@ -139,7 +133,8 @@ def command_handler(command: str, server: Server, config: dict):
     
 
 def main():
-    config: dict = config_loader()
+    config = config_loader(); print(f"Config: {config}")
+    
     
     if not os.path.exists("server_files"):
         os.makedirs("server_files")
@@ -147,12 +142,13 @@ def main():
     
     server = Server(["0.0.0.0", 8081])
     
-    def signal_handler(sig, frame):
-        prints(tp.IMPORTANT, "Interrupt received, stopping server...")
+    def exit_program():
+        prints(tp.IMPORTANT, "Stopping server...")
         server.stop()
         exit(0)
+        
+    keyboard.add_hotkey("ctrl+c", exit_program)
     
-    signal.signal(signal.SIGINT, signal_handler)
     
     prints(tp.IMPORTANT, "Starting server...")
     sleep(1)

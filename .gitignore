@@ -1,3 +1,19 @@
 .vscode/launch.json
 .server_files
 .Downloads
+.config.json
+Downloads/test.txt
+__pycache__/receive_files.cpython-311.pyc
+__pycache__/classes.cpython-311.pyc
+server_files/pexels-m-venter.jpg
+server_files/example_dog.jpg
+server_files/3gb_payload.zip
+Downloads/pexels-m-venter.jpg
+Downloads/example_dog.jpg
+Downloads/3gb_payload.zip
+
+math_testing.py
+server_files/5gb payload.zip
+
+Downloads
+server_files
